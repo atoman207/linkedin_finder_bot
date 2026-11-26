@@ -8,3 +8,5 @@ next-env.d.ts
 # Keep hiring data in git so Vercel and teammates get the full set.
 # Only noisy local logs stay out.
 data/scrape.log
+
+
