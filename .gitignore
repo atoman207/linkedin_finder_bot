@@ -9,3 +9,6 @@ next-env.d.ts
 # serves is committed — it is what Vercel deploys. Raw scrape, caches and exports stay local.
 data/*
 !data/snapshot.json
+# Keep the public static copy of the snapshot (Vercel serves it at /data/snapshot.json).
+!public/data/
+!public/data/snapshot.json

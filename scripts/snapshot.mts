@@ -16,6 +16,8 @@ import { countryOf } from "../lib/regions.ts";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "data", "engineers.json");
 const OUT = path.join(ROOT, "data", "snapshot.json");
+/** Static copy shipped with the site (Vercel serves /data/snapshot.json with no DB). */
+const PUBLIC_OUT = path.join(ROOT, "public", "data", "snapshot.json");
 
 /** Fields read by components/* and lib/csv.ts — everything else (bio, instagram, …) is dropped. */
 const FIELDS = [
@@ -60,9 +62,13 @@ const snapshot = {
   removed: { linkedin: noLinkedin, country: hiddenCountry },
   engineers,
 };
-fs.writeFileSync(OUT, JSON.stringify(snapshot));
+const body = JSON.stringify(snapshot);
+fs.writeFileSync(OUT, body);
+fs.mkdirSync(path.dirname(PUBLIC_OUT), { recursive: true });
+fs.writeFileSync(PUBLIC_OUT, body);
 const kb = Math.round(fs.statSync(OUT).size / 1024);
 console.log(
-  `Wrote ${path.relative(ROOT, OUT)}: ${engineers.length} engineers (${kb} KB); ` +
+  `Wrote ${path.relative(ROOT, OUT)} + ${path.relative(ROOT, PUBLIC_OUT)}: ` +
+    `${engineers.length} engineers (${kb} KB); ` +
     `left out ${noLinkedin} without LinkedIn and ${hiddenCountry} in hidden countries.`
 );

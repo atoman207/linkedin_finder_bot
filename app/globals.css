@@ -158,9 +158,10 @@ input {
 .shell {
   position: relative;
   isolation: isolate;
-  max-width: 1440px;
+  width: 100%;
+  max-width: 1920px;
   margin: 0 auto;
-  padding: 20px 16px 48px;
+  padding: 20px 24px 48px;
   transition: --a1 0.7s ease, --a2 0.7s ease, --ink 0.7s ease;
 }
 /* soft coloured glow behind everything, follows the region colour */

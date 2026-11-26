@@ -113,13 +113,24 @@ export default function EngineerBrowser() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/engineers", { cache: "no-store" })
-      .then(async (res) => {
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
-        setData(json as Dataset);
-      })
-      .catch((e: Error) => setError(e.message));
+    // Prefer the static public snapshot (no DB; survives Vercel deploys). Fall back to the API route.
+    const load = async () => {
+      const urls = ["/data/snapshot.json", "/api/engineers"];
+      let lastError = "No data snapshot found.";
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+          setData(json as Dataset);
+          return;
+        } catch (e) {
+          lastError = e instanceof Error ? e.message : String(e);
+        }
+      }
+      setError(lastError);
+    };
+    void load();
   }, []);
 
   const removed = useMemo(() => {

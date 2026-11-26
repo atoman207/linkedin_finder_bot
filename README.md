@@ -26,18 +26,19 @@ automatically when that happens.
 
 ## Deploying (Vercel)
 
-The app serves `data/snapshot.json`, a filtered copy of the scrape built by `npm run snapshot` (runs
-automatically after `npm run scrape`). It only contains the engineers the app shows, and only the fields it
-uses. It's the one data file committed to git; it's read at build time and served as a static file, so the
-deployment shows exactly what you see locally.
+No database. The app ships a filtered scrape snapshot built by `npm run snapshot` (also runs at the end of
+`npm run scrape`). That snapshot is committed in two places so every deploy shows the same users:
+
+- `data/snapshot.json` — source of truth in the repo
+- `public/data/snapshot.json` — static file Vercel serves at `/data/snapshot.json`
 
 1. Make the GitHub repo **private** before pushing the snapshot (it contains people's contact details).
-2. `git add -A && git commit -m "…" && git push` — Vercel redeploys automatically.
+2. Commit both snapshot files and push — Vercel redeploys automatically with all users viewable.
 3. Optional password: in Vercel → Settings → Environment Variables set `SITE_PASSWORD` (and optionally
    `SITE_USER`, default `admin`), then redeploy. Every page and the data endpoint then require that login
    (`proxy.ts`).
 
-To refresh the data later: `npm run scrape`, then commit `data/snapshot.json` and push.
+To refresh the data later: `npm run scrape`, then commit both snapshot files and push.
 Search engines are told not to index the site (`robots.txt` + `noindex`).
 
 ## Who is shown — `lib/config.ts`
@@ -79,6 +80,7 @@ to prevent spreadsheet formula injection.
 
 ## Notes
 
-- `data/` holds personal contact details and is git-ignored. Use it only for recruiting outreach and
-  handle it per your privacy obligations (e.g. GDPR for EU residents).
+- Raw scrape files under `data/` (except `snapshot.json`) are git-ignored. The committed snapshots hold
+  personal contact details — keep the repo private and use the data only for recruiting outreach
+  (e.g. GDPR for EU residents).
 - If web3.career changes its HTML, update `parseListing` / `parseProfile` in `scripts/scrape.mjs`.
