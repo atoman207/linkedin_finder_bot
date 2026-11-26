@@ -277,8 +277,8 @@ export function EngineerRow({ r, n, copied, onCopied }: RowProps) {
       </td>
       <td>
         <CountryCell r={r} />
+        {r.experience && <div className="exp exp-row">{r.experience}</div>}
       </td>
-      <td className="nowrap">{r.experience ?? "—"}</td>
       <td className="li-col">
         <LinkedInField url={safeUrl(r.linkedin)} copied={copied} onCopied={onCopied} />
       </td>

@@ -39,6 +39,8 @@ export interface Dataset {
   scrapedAt: string;
   total: number;
   failed: number;
+  /** Set by scripts/snapshot.mts: how many were left out by lib/config.ts rules */
+  removed?: { linkedin: number; country: number };
   engineers: Engineer[];
 }
 

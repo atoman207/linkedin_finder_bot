@@ -1,7 +1,8 @@
 /**
  * Which scraped engineers the app shows and exports.
- * data/engineers.json keeps everyone; these rules are applied when the app loads it,
- * so they affect every tab, count and CSV download. Edit and rebuild to change them.
+ * data/engineers.json (local only) keeps everyone. These rules are applied when building
+ * data/snapshot.json — the file the app serves and Vercel deploys — and again in the UI, so they
+ * affect every tab, count and CSV download. After editing: `npm run snapshot`, then rebuild/redeploy.
  */
 
 /** Countries removed entirely (ISO codes, matched on where the engineer is based). */

@@ -7,39 +7,78 @@ Next.js app grouped by region → country (Americas first), with CSV export.
 
 ```bash
 npm install
-npm run scrape        # crawl listing + every profile -> data/engineers.json  (~30 min for ~3,900 profiles)
+npm run scrape               # crawl listing + every profile -> data/engineers.json (~1 h first time)
 npm run build && npm start   # or: npm run dev
 # open http://localhost:3000
 ```
 
-Re-running `npm run scrape` re-crawls the listing and only fetches profiles that aren't cached yet
-(`data/cache/profiles.json`), so it's quick and resumable. Use `npm run scrape -- --fresh` to refetch everything.
+Re-running `npm run scrape` reuses the listing crawl if it's under 24 h old and only fetches profiles that
+aren't cached yet (`data/cache/`), so it's quick and resumable.
 
-Options: `--concurrency 4` (parallel requests), `--delay 250` (ms between requests per worker), `--max-pages N`.
+| Flag | Effect |
+| --- | --- |
+| `--relist` | re-crawl the listing pages (picks up new candidates and avatars) |
+| `--fresh` | ignore all caches and refetch everything |
+| `--concurrency 2` / `--delay 800` | parallel requests / ms between requests per worker |
+
+The site rate-limits (HTTP 429) aggressive crawling; the scraper pauses all workers and slows down
+automatically when that happens.
+
+## Deploying (Vercel)
+
+The app serves `data/snapshot.json`, a filtered copy of the scrape built by `npm run snapshot` (runs
+automatically after `npm run scrape`). It only contains the engineers the app shows, and only the fields it
+uses. It's the one data file committed to git; it's read at build time and served as a static file, so the
+deployment shows exactly what you see locally.
+
+1. Make the GitHub repo **private** before pushing the snapshot (it contains people's contact details).
+2. `git add -A && git commit -m "…" && git push` — Vercel redeploys automatically.
+3. Optional password: in Vercel → Settings → Environment Variables set `SITE_PASSWORD` (and optionally
+   `SITE_USER`, default `admin`), then redeploy. Every page and the data endpoint then require that login
+   (`proxy.ts`).
+
+To refresh the data later: `npm run scrape`, then commit `data/snapshot.json` and push.
+Search engines are told not to index the site (`robots.txt` + `noindex`).
+
+## Who is shown — `lib/config.ts`
+
+```ts
+export const HIDDEN_COUNTRIES = new Set(["KR"]); // South Korea removed
+export const REQUIRE_LINKEDIN = true;            // engineers without LinkedIn removed
+```
+
+These rules apply to every tab, count and CSV export. The local `data/engineers.json` still holds the full
+scrape, so changing a rule and running `npm run snapshot` (then rebuild/redeploy) brings people back without
+re-scraping.
+
+## App
+
+- **Regions**: Americas · Europe · Asia & Middle East · Africa · Oceania · Remote/Unknown — each with its own colour
+  theme; **country tabs** inside each, sorted by headcount
+- **All <region>** view has a **Choose countries** picker (grouped by subregion, with "only Southeast Asia"-style shortcuts)
+- **LinkedIn**: full clickable URL (`https://www.linkedin.com/in/<name>/`) with a **Copy** button that turns
+  **red** once copied. Copied marks are remembered in this browser (localStorage); "Clear copied marks" resets them
+- **Avatars** from web3.career / Gravatar (coloured initials when there is no photo)
+- Search (name, skill, role, country, Telegram), "must have Telegram/GitHub/Website" filters, sorting
+- **Download this view** (respects filters) or **Download all** (Americas first) as CSV
+- Responsive: table on desktop, cards on phones/tablets; animations respect "reduce motion"
+- Views are bookmarkable, e.g. `/?region=asia&country=all&exclude=CN&has=telegram`
+
+CSV files are UTF-8 with BOM (open cleanly in Excel); cells that start with `= + - @` are prefixed with `'`
+to prevent spreadsheet formula injection.
 
 ## What is collected
 
 | Field | Source on web3.career |
 | --- | --- |
-| Name | Username shown on the profile (the site doesn't publish real names; anonymous profiles show as `Anonymous #id`) |
+| Name | Username on the profile (the site doesn't publish real names; anonymous profiles show as `Anonymous #id`) |
 | Name (from LinkedIn URL) | Best-effort guess parsed from the LinkedIn slug, e.g. `in/fredy-alberto-polar` → "Fredy Alberto Polar" |
-| LinkedIn / Telegram / GitHub / Website / Twitter | Social links the candidate added to their profile (blank if they didn't add one) |
+| LinkedIn / Telegram / GitHub / Website / Twitter | Links the candidate added (Telegram entries that aren't usernames — full names, phone numbers — go in a separate column) |
 | Country | Residency, falling back to nationality |
-| Headline, category, experience, salary, skills, languages, latest job | Profile details |
-
-## App
-
-- **Region bar**: Americas · Europe · Asia & Middle East · Africa · Oceania · Remote/Unknown
-- **Country tabs** inside each region, sorted by number of engineers (plus an "All <region>" tab)
-- Search (name, skills, role, Telegram), "must have LinkedIn/Telegram/GitHub/Website" filters, sorting
-- **Download CSV** for the current tab (respects filters) or **Download all** (sorted Americas first)
-
-CSV files are UTF-8 with BOM (open cleanly in Excel); cells that start with `= + - @` are prefixed with `'`
-to prevent spreadsheet formula injection.
+| Avatar, headline, category, experience, salary, skills, languages, latest job | Profile / listing card |
 
 ## Notes
 
 - `data/` holds personal contact details and is git-ignored. Use it only for recruiting outreach and
   handle it per your privacy obligations (e.g. GDPR for EU residents).
-- If web3.career changes its HTML, the parsers in `scripts/scrape.mjs` (`parseListing`, `parseProfile`) are the
-  places to update.
+- If web3.career changes its HTML, update `parseListing` / `parseProfile` in `scripts/scrape.mjs`.

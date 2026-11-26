@@ -5,5 +5,7 @@ next-env.d.ts
 *.tsbuildinfo
 .env*
 
-# scraped data (contains personal contact details)
-data/
+# Scraped data (personal contact details). Only the filtered snapshot that the app
+# serves is committed — it is what Vercel deploys. Raw scrape, caches and exports stay local.
+data/*
+!data/snapshot.json

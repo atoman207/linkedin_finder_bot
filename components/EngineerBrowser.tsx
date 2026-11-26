@@ -123,6 +123,7 @@ export default function EngineerBrowser() {
   }, []);
 
   const removed = useMemo(() => {
+    if (data?.removed) return data.removed; // snapshot already applied the rules
     let country = 0;
     let linkedin = 0;
     for (const e of data?.engineers ?? []) {
@@ -503,8 +504,7 @@ export default function EngineerBrowser() {
               <th>#</th>
               <th>Engineer</th>
               <th>Role &amp; skills</th>
-              <th>Country</th>
-              <th>Exp.</th>
+              <th>Country &amp; exp.</th>
               <th>LinkedIn</th>
               <th>Telegram</th>
               <th>GitHub</th>
@@ -517,7 +517,7 @@ export default function EngineerBrowser() {
             ))}
             {!pageRows.length && (
               <tr>
-                <td colSpan={9} className="empty">
+                <td colSpan={8} className="empty">
                   No engineers match these filters.
                 </td>
               </tr>

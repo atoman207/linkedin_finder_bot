@@ -7,6 +7,7 @@ const sans = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-sans", di
 export const metadata: Metadata = {
   title: "Blockchain Engineer Finder",
   description: "Blockchain engineers from web3.career/hire, grouped by country with CSV export.",
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
