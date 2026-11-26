@@ -26,19 +26,20 @@ automatically when that happens.
 
 ## Deploying (Vercel)
 
-No database. The app ships a filtered scrape snapshot built by `npm run snapshot` (also runs at the end of
-`npm run scrape`). That snapshot is committed in two places so every deploy shows the same users:
+No database. The hiring dataset is committed in git and deployed as static files on Vercel:
 
-- `data/snapshot.json` — source of truth in the repo
-- `public/data/snapshot.json` — static file Vercel serves at `/data/snapshot.json`
+- `public/data/snapshot.json` — what the live site loads (`/data/snapshot.json`), 2,971 LinkedIn-ready engineers
+- `data/snapshot.json` — same filtered snapshot (source of truth)
+- `data/engineers.json` — full scrape (all profiles before LinkedIn/country filters)
+- `data/cache/` — scrape caches for resumable updates
+- `data/exports/` — CSV exports used for outreach
 
-1. Make the GitHub repo **private** before pushing the snapshot (it contains people's contact details).
-2. Commit both snapshot files and push — Vercel redeploys automatically with all users viewable.
+1. Keep the GitHub repo **private** (contact details for recruiting outreach).
+2. Push to `main` — Vercel redeploys automatically and serves the committed snapshot as-is.
 3. Optional password: in Vercel → Settings → Environment Variables set `SITE_PASSWORD` (and optionally
-   `SITE_USER`, default `admin`), then redeploy. Every page and the data endpoint then require that login
-   (`proxy.ts`).
+   `SITE_USER`, default `admin`), then redeploy (`proxy.ts`).
 
-To refresh the data later: `npm run scrape`, then commit both snapshot files and push.
+To refresh later: `npm run scrape`, then commit the updated `data/` + `public/data/` files and push.
 Search engines are told not to index the site (`robots.txt` + `noindex`).
 
 ## Who is shown — `lib/config.ts`
@@ -80,7 +81,6 @@ to prevent spreadsheet formula injection.
 
 ## Notes
 
-- Raw scrape files under `data/` (except `snapshot.json`) are git-ignored. The committed snapshots hold
-  personal contact details — keep the repo private and use the data only for recruiting outreach
-  (e.g. GDPR for EU residents).
+- Committed data holds personal contact details — keep the repo private and use it only for recruiting
+  outreach (e.g. GDPR for EU residents).
 - If web3.career changes its HTML, update `parseListing` / `parseProfile` in `scripts/scrape.mjs`.

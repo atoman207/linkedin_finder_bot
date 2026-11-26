@@ -5,10 +5,6 @@ next-env.d.ts
 *.tsbuildinfo
 .env*
 
-# Scraped data (personal contact details). Only the filtered snapshot that the app
-# serves is committed — it is what Vercel deploys. Raw scrape, caches and exports stay local.
-data/*
-!data/snapshot.json
-# Keep the public static copy of the snapshot (Vercel serves it at /data/snapshot.json).
-!public/data/
-!public/data/snapshot.json
+# Keep hiring data in git so Vercel and teammates get the full set.
+# Only noisy local logs stay out.
+data/scrape.log
