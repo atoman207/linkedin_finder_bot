@@ -32,6 +32,9 @@ export interface Engineer {
   latestJob?: string | null;
   bio?: string | null;
   fetchError?: string;
+  /** From `npm run check:linkedin`: ok | dead | unknown */
+  linkedinStatus?: "ok" | "dead" | "unknown" | string | null;
+  linkedinStatusReason?: string | null;
 }
 
 export interface Dataset {
@@ -40,7 +43,7 @@ export interface Dataset {
   total: number;
   failed: number;
   /** Set by scripts/snapshot.mts: how many were left out by lib/config.ts rules */
-  removed?: { linkedin: number; country: number };
+  removed?: { linkedin: number; country: number; deadLinkedin?: number };
   engineers: Engineer[];
 }
 

@@ -10,7 +10,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { HIDDEN_COUNTRIES, REQUIRE_LINKEDIN } from "../lib/config.ts";
+import { HIDDEN_COUNTRIES, HIDE_DEAD_LINKEDIN, REQUIRE_LINKEDIN } from "../lib/config.ts";
+import { isDeadLinkedin } from "../lib/linkedin.ts";
 import { countryOf } from "../lib/regions.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -24,7 +25,7 @@ const FIELDS = [
   "id", "profileUrl", "rank", "avatar", "verified", "cardFlagCode", "username", "name", "linkedinName",
   "headline", "category", "experience", "yearlySalary", "hourlyRate", "residencyCode", "residencyName",
   "nationalityCode", "nationalityName", "linkedin", "telegram", "telegramId", "telegramInvalid", "github",
-  "website", "twitter", "skills", "languages", "latestJob", "fetchError",
+  "website", "twitter", "skills", "languages", "latestJob", "fetchError", "linkedinStatus", "linkedinStatusReason",
 ];
 
 if (!fs.existsSync(SRC)) {
@@ -35,6 +36,7 @@ const raw = JSON.parse(fs.readFileSync(SRC, "utf8"));
 
 let hiddenCountry = 0;
 let noLinkedin = 0;
+let deadLinkedin = 0;
 const engineers: Record<string, unknown>[] = [];
 for (const e of raw.engineers) {
   if (HIDDEN_COUNTRIES.has(countryOf(e).key)) {
@@ -43,6 +45,10 @@ for (const e of raw.engineers) {
   }
   if (REQUIRE_LINKEDIN && !e.linkedin) {
     noLinkedin++;
+    continue;
+  }
+  if (HIDE_DEAD_LINKEDIN && isDeadLinkedin(e)) {
+    deadLinkedin++;
     continue;
   }
   const o: Record<string, unknown> = {};
@@ -59,7 +65,7 @@ const snapshot = {
   scrapedAt: raw.scrapedAt,
   total: engineers.length,
   failed: engineers.filter((e) => e.fetchError).length,
-  removed: { linkedin: noLinkedin, country: hiddenCountry },
+  removed: { linkedin: noLinkedin, country: hiddenCountry, deadLinkedin },
   engineers,
 };
 const body = JSON.stringify(snapshot);
@@ -70,5 +76,6 @@ const kb = Math.round(fs.statSync(OUT).size / 1024);
 console.log(
   `Wrote ${path.relative(ROOT, OUT)} + ${path.relative(ROOT, PUBLIC_OUT)}: ` +
     `${engineers.length} engineers (${kb} KB); ` +
-    `left out ${noLinkedin} without LinkedIn and ${hiddenCountry} in hidden countries.`
+    `left out ${noLinkedin} without LinkedIn, ${deadLinkedin} dead/404 LinkedIn, ` +
+    `${hiddenCountry} in hidden countries.`
 );

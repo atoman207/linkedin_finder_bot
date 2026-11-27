@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ContactKey, Dataset, Item, RegionId } from "@/lib/types";
 import { REGIONS, REGION_ORDER, countryOf, regionOf, subregionOf, subregionOrder } from "@/lib/regions";
-import { HIDDEN_COUNTRIES, REQUIRE_LINKEDIN } from "@/lib/config";
+import { HIDDEN_COUNTRIES, HIDE_DEAD_LINKEDIN, REQUIRE_LINKEDIN } from "@/lib/config";
 import { downloadCsv } from "@/lib/csv";
+import { isDeadLinkedin } from "@/lib/linkedin";
 import { CountryBadge, EngineerCard, EngineerRow, SearchIcon } from "./parts";
 
 const CONTACTS: { key: ContactKey; label: string }[] = [
@@ -137,11 +138,13 @@ export default function EngineerBrowser() {
     if (data?.removed) return data.removed; // snapshot already applied the rules
     let country = 0;
     let linkedin = 0;
+    let deadLinkedin = 0;
     for (const e of data?.engineers ?? []) {
       if (HIDDEN_COUNTRIES.has(countryOf(e).key)) country++;
       else if (REQUIRE_LINKEDIN && !e.linkedin) linkedin++;
+      else if (HIDE_DEAD_LINKEDIN && isDeadLinkedin(e)) deadLinkedin++;
     }
-    return { country, linkedin };
+    return { country, linkedin, deadLinkedin };
   }, [data]);
 
   const items: Item[] = useMemo(() => {
@@ -151,6 +154,7 @@ export default function EngineerBrowser() {
       const c = countryOf(e);
       if (HIDDEN_COUNTRIES.has(c.key)) continue;
       if (REQUIRE_LINKEDIN && !e.linkedin) continue;
+      if (HIDE_DEAD_LINKEDIN && isDeadLinkedin(e)) continue;
       out.push({
         ...e,
         country: c,
@@ -558,9 +562,10 @@ export default function EngineerBrowser() {
         </div>
       )}
 
-      {(removed.linkedin > 0 || removed.country > 0) && (
+      {(removed.linkedin > 0 || removed.country > 0 || (removed.deadLinkedin ?? 0) > 0) && (
         <p className="footnote muted small">
           Hidden by settings in lib/config.ts: {removed.linkedin.toLocaleString()} without LinkedIn
+          {(removed.deadLinkedin ?? 0) > 0 && <>, {(removed.deadLinkedin ?? 0).toLocaleString()} dead/404 LinkedIn</>}
           {removed.country > 0 && <>, {removed.country} in excluded countries</>}.
         </p>
       )}

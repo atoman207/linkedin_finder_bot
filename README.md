@@ -39,7 +39,8 @@ No database. The hiring dataset is committed in git and deployed as static files
 3. Optional password: in Vercel → Settings → Environment Variables set `SITE_PASSWORD` (and optionally
    `SITE_USER`, default `admin`), then redeploy (`proxy.ts`).
 
-To refresh later: `npm run scrape`, then commit the updated `data/` + `public/data/` files and push.
+To refresh later: `npm run scrape`, then optionally `npm run check:linkedin` (drops LinkedIn 404 /
+suspended profiles), then commit the updated `data/` + `public/data/` files and push.
 Search engines are told not to index the site (`robots.txt` + `noindex`).
 
 ## Who is shown — `lib/config.ts`
